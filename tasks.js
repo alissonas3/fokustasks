@@ -5,10 +5,11 @@ const cancelTaskBtn = document.querySelector('.app__form-footer__button--cancel'
 const deleteTaskBtn = document.querySelector('.app__form-footer__button--delete');
 const formTask = document.querySelector('.app__form-add-task');
 const formLabel = document.querySelector('.app__form-label');
+const taskActiveDescription = document.querySelector('.app__section-active-task-description');
 
 const textarea = document.querySelector(`.app__form-textarea`);
 
-const localStorageTasks = localStorage.getItem('tasks');
+const localStorageTasks = localStorage.getItem('tasks')
 let tasks = localStorageTasks ? JSON.parse(localStorageTasks) : []
 
 const taskIconSvg = `
@@ -21,12 +22,56 @@ const taskIconSvg = `
 </svg>
 `
 
+let taskSelected = null
+let taskSelectedItem = null
+
+let editingTask = null
+let editingParagraph = null
+
+
+const selectTask = (task, element) => {
+    document.querySelectorAll('app__section-task-list-item-active').forEach(function (button) {
+        button.classList.remove('app__section-task-list-item-active');
+    })
+
+    if (taskSelected == task) {
+        taskActiveDescription.textContent = null
+        taskSelectedItem = null
+        taskSelected = null
+        return
+    }
+
+    taskSelected = task
+    taskSelectedItem = element
+    taskActiveDescription.textContent = task.descricao
+    element.classList.add('app__section-task-list-item-active')
+}
+
+
 function clearForm() {
-    textarea.value = '';
+    editingTask = null
+    editingParagraph = null
+    textarea.value = ''
     formTask.classList.add('hidden');
 }
 
-function createTask (task) {
+
+const editTask = (task, element) => {
+
+    if (editingTask == task) {
+        clearForm()
+        return
+    }
+
+    formLabel.textContent = 'Editando tarefa'
+    editingTask = task
+    editingParagraph = element
+    textarea.value = task.descricao
+    formTask.classList.remove('hidden')
+}
+
+
+function createTask(task) {
 
     const li = document.createElement('li');
     li.classList.add('app__section-task-list-item');
@@ -39,11 +84,43 @@ function createTask (task) {
 
     paragraph.textContent = task.descricao;
 
+    const button = document.createElement('button');
+
+    button.classList.add('app_button-edit');
+    const editButton = document.createElement('img');
+    editButton.setAttribute('src', './imagens/edit.png');
+
+    button.appendChild(editButton);
+
+    button.addEventListener('click', (event) => {
+        event.stopPropagation()
+        editTask(task, paragraph)
+    })
+
+
+    li.onclick = () => {
+        selectTask(task, li)
+    }
+
+    svgIcon.addEventListener('click', event => {
+
+        event.stopPropagation()
+        button.setAttribute('disabled', true);
+        li.classList.add('app__section-task-list-item-complete');
+
+        if (task.concluida) {
+            button.setAttribute('disabled', true);
+            li.classList.add('app__section-task-list-item-complete');
+        }
+    })
+
     li.appendChild(svgIcon);
     li.appendChild(paragraph);
+    li.appendChild(button);
 
     return li;
 }
+
 
 tasks.forEach(task => {
     const taskItem = createTask(task)
@@ -56,24 +133,33 @@ toggleFormTaskBtn.addEventListener('click', () => {
     formTask.classList.toggle('hidden');
 })
 
+
 const updateLocalStorage = () => {
     localStorage.setItem('tasks', JSON.stringify(tasks))
 }
 
+
 formTask.addEventListener('submit', (event) => {
     event.preventDefault()
-    const task = {
-        descricao: textarea.value,
-        concluida: false
-    }
 
-    tasks.push()
-    const taskItem = createTask(task)
-    taskList.appendChild(taskItem)
+    if (editingTask) {
+        editingTask.descricao = textarea.value
+        editingParagraph.textContent = textarea.value
+    } else {
+        const task = {
+            descricao: textarea.value,
+            concluida: false
+        }
+
+        tasks.push(task)
+        const taskItem = createTask(task)
+        taskList.appendChild(taskItem)
+    }
 
     updateLocalStorage()
     clearForm()
 })
+
 
 cancelTaskBtn.addEventListener('click', () => {
     clearForm()
