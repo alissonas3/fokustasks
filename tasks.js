@@ -3,6 +3,8 @@ const taskList = document.querySelector('.app__section-task-list');
 const toggleFormTaskBtn = document.querySelector('.app__button--add-task');
 const cancelTaskBtn = document.querySelector('.app__form-footer__button--cancel');
 const deleteTaskBtn = document.querySelector('.app__form-footer__button--delete');
+const removeTasksCompleted = document.querySelector('#btn-remover-concluidas');
+const removeAllTasks = document.querySelector('#btn-remover-todas');
 const formTask = document.querySelector('.app__form-add-task');
 const formLabel = document.querySelector('.app__form-label');
 const taskActiveDescription = document.querySelector('.app__section-active-task-description');
@@ -30,7 +32,12 @@ let editingParagraph = null
 
 
 const selectTask = (task, element) => {
-    document.querySelectorAll('app__section-task-list-item-active').forEach(function (button) {
+
+    if(task.concluida) {
+        return
+    }
+
+    document.querySelectorAll('.app__section-task-list-item-active').forEach(function (button) {
         button.classList.remove('app__section-task-list-item-active');
     })
 
@@ -49,6 +56,7 @@ const selectTask = (task, element) => {
 
 
 function clearForm() {
+
     editingTask = null
     editingParagraph = null
     textarea.value = ''
@@ -104,9 +112,13 @@ function createTask(task) {
 
     svgIcon.addEventListener('click', event => {
 
-        event.stopPropagation()
-        button.setAttribute('disabled', true);
-        li.classList.add('app__section-task-list-item-complete');
+        if(task == taskSelected) {
+            event.stopPropagation()
+            button.setAttribute('disabled', true);
+            li.classList.add('app__section-task-list-item-complete');
+            taskSelected.concluida = true;
+            updateLocalStorage()
+        }
 
         if (task.concluida) {
             button.setAttribute('disabled', true);
@@ -161,6 +173,51 @@ formTask.addEventListener('submit', (event) => {
 })
 
 
-cancelTaskBtn.addEventListener('click', () => {
+cancelTaskBtn.addEventListener('click', clearForm)
+
+
+const removeTasks = (completed) => {
+
+    const seletor = completed ? '.app__section-task-list-item-complete' : '.app__section-task-list-item';
+
+    document.querySelectorAll(seletor).forEach((element) => {
+        element.remove()
+    })
+
+    tasks = completed ? tasks.filter(t => !t.concluida) : []
+    updateLocalStorage()
+
+}
+
+removeTasksCompleted.addEventListener('click', () => removeTasks(true))
+removeAllTasks.addEventListener('click', () => removeTasks(false))
+
+
+deleteTaskBtn.addEventListener('click', () => {
+    
+    if (taskSelected) {
+        const index = tasks.filter(t => t != taskSelected)
+
+        if (index !== -1) {                 // Verifica se há uma tarefa, se uma tarefa está selecionada.
+            tasks.splice(index, 1)          // Remove a tarefa.
+        }
+
+        taskSelectedItem.remove()
+        tasks.filter(t => t !=  taskSelected)       // Cria um novo array sem a tarefa que foi removida.
+        taskSelectedItem = null
+        taskSelected = null
+    }
+
+    updateLocalStorage()
     clearForm()
+})
+
+document.addEventListener("TaskCompleted", function(e) {
+
+    if (taskSelected) {
+        taskSelected.concluida = true;
+        taskSelectedItem.classList.add('app__section-task-list-item-complete')
+        taskSelectedItem.querySelector('button').setAttribute('disabled', true)
+        updateLocalStorage()
+    }
 })

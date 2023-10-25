@@ -40,7 +40,7 @@ body {
     background-repeat: no-repeat;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6, p {
     font-family: 'Unbounded', cursive;
 }
 
@@ -249,8 +249,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .app__section-active-task-label {
-    font-family: Montserrat;
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-style: normal;
     font-weight: 400;
     line-height: 150%;
